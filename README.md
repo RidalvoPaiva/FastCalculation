@@ -4,7 +4,7 @@ com as configurações definidas anteriormente na aula do Prof. Pedro.\\
 01. \\Criando a nova ResultFragment\\
 \\Esse fragmento tem a função de exibir o resultado e passar o valor como argumento\\. 
 ====================================================================================================================================================================
-====================================================================================================================================================================
+
 
 class ResultFragment : Fragment() {
     private lateinit var fragmentResultBinding: FragmentResultBinding
@@ -55,7 +55,7 @@ class ResultFragment : Fragment() {
 }
 
 =========================================================================================================================================================================
-=========================================================================================================================================================================
+
 02. \\Modificando o GameFragment para navegar até o ResultFragment\\
 \\Para isso, modifiquei o (GameFragment) para que, ao final do jogo, ele navegue até o (ResultFragment), passando os pontos como argumento.\\
 
@@ -85,7 +85,7 @@ private fun play() {
 }
 
 ==================================================================================================================================================
-==================================================================================================================================================
+
 03\\ Layout para o (ResultFragment)
 \\Segue o exemplo de código para o fragmento de resultado (fragment_result.xml):
 
