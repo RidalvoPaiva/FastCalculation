@@ -1,4 +1,4 @@
-package br.edu.scl.ifsp.sdm.fastcalculation
+package br.edu.ifsp.scl.fastcalculation
 
 import kotlin.random.Random
 
@@ -28,7 +28,7 @@ class CalculationGame(private val rounds: Int) {
             op2 = op2.coerceAtMost(op1)
             op1 = x.coerceAtLeast(op1)
 
-            val operator = Operator.values()[random.nextInt(4)]
+            val operator = Operator.entries[random.nextInt(4)]
 
             val answer: Int
             val question: String

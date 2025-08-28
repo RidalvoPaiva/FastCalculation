@@ -11,9 +11,6 @@ import android.view.ViewGroup
 import android.widget.Button
 import br.edu.ifsp.scl.fastcalculation.Extras.EXTRA_SETTINGS
 import br.edu.ifsp.scl.fastcalculation.databinding.FragmentGameBinding
-import br.edu.ifsp.scl.fastcalculation.databinding.FragmentWelcomeBinding
-import br.edu.scl.ifsp.sdm.fastcalculation.CalculationGame
-
 
 class GameFragment : Fragment() {
     private lateinit var fragmentGameBinding: FragmentGameBinding
@@ -22,8 +19,9 @@ class GameFragment : Fragment() {
     private lateinit var calculationGame: CalculationGame
     private var currentRound: CalculationGame.Round? = null
     private var startRoundTimer = 0L
-    private var totalGame = 0L
+    private var totalGameTime = 0L
     private var hits = 0
+
     private val roundDeadLineHandler = object : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
             super.handleMessage(msg)
@@ -45,23 +43,25 @@ class GameFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         fragmentGameBinding = FragmentGameBinding.inflate(inflater, container, false)
+
         val onClickListener = View.OnClickListener {
             val value = (it as Button).text.toString().toInt()
             if (value == currentRound?.answer) {
-                var totalGameTime = System.currentTimeMillis() - startRoundTimer
+                totalGameTime += System.currentTimeMillis() - startRoundTimer
                 hits++
             } else {
-                var totalGameTime = +settings.roundInterval
+                totalGameTime += settings.roundInterval
                 hits--
             }
             play()
-
         }
+
         fragmentGameBinding.apply {
             alternativeOneBt.setOnClickListener(onClickListener)
             alternativeTwoBt.setOnClickListener(onClickListener)
             alternativeThreeBt.setOnClickListener(onClickListener)
         }
+
         roundDeadLineHandler.removeMessages(MSG_ROUND_DEADLINE)
         play()
 
@@ -72,38 +72,50 @@ class GameFragment : Fragment() {
         currentRound = calculationGame.nextRound()
         if (currentRound != null) {
             fragmentGameBinding.apply {
-                "Round: ${currentRound!!.round}/${settings.rounds}".also {
-                    roundTv.text = it
-                }
+                roundTv.text = "Round: ${currentRound!!.round}/${settings.rounds}"
                 questionTv.text = currentRound!!.question
                 alternativeOneBt.text = currentRound!!.alt1.toString()
                 alternativeTwoBt.text = currentRound!!.alt2.toString()
                 alternativeThreeBt.text = currentRound!!.alt3.toString()
             }
+            // (Re)inicia o cronômetro do round
             startRoundTimer = System.currentTimeMillis()
+            // Evita múltiplos agendamentos
+            roundDeadLineHandler.removeMessages(MSG_ROUND_DEADLINE)
             roundDeadLineHandler.sendEmptyMessageDelayed(MSG_ROUND_DEADLINE, settings.roundInterval)
         } else {
-            val totalTimeInSeconds = totalGameTime / 1000L
-            val points = hits * 10f / totalTimeInSeconds
+            // Acabaram os rounds
+            roundDeadLineHandler.removeMessages(MSG_ROUND_DEADLINE)
 
-            // Navega para o fragmento de resultado
+            val totalTimeInSeconds = totalGameTime / 1000L
+
+            val points: Float = if (totalTimeInSeconds > 0L) {
+                (hits.toFloat() * 10f) / totalTimeInSeconds.toFloat()
+            } else {
+                0f
+            }
+
+            // Usa o container do próprio fragment para fazer o replace (evita erro de R.id.* inexistente)
             parentFragmentManager.beginTransaction()
-                .replace(R.id.container, ResultFragment.newInstance(points, settings))
+                .replace(this@GameFragment.id, ResultFragment.newInstance(points, settings))
                 .commit()
         }
     }
-}
- 
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        roundDeadLineHandler.removeMessages(MSG_ROUND_DEADLINE)
+    }
+
     companion object {
         private const val MSG_ROUND_DEADLINE = 0
+
         @JvmStatic
         fun newInstance(settings: Settings) =
             GameFragment().apply {
                 arguments = Bundle().apply {
                     putParcelable(EXTRA_SETTINGS, settings)
-
                 }
             }
     }
-
 }
